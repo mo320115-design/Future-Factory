@@ -289,7 +289,7 @@ function renderBar(){setTimeout(function(){if($("soc2")&&$("soc"))$("soc2").inne
  if(m==="STALE")h+='<div class="wn">'+(G.market==="CLOSED"?'السوق مغلق - ':'تحديث الأسعار متوقف - ')+'آخر سعر متاح – يرجى تأكيد السعر داخل المحل</div>';
  if(m==="MANUAL")h+='<div class="wn">سعر معتمد من إدارة المحل وليس سعراً لحظياً من السوق</div>';
  if(m==="NONE")h+='<div class="wn">الأسعار غير متاحة حالياً - يرجى السؤال داخل المحل</div>';
- if(m!=="NONE")h+='<div class="note">سعر الجرام للبيع · آخر تحديث: '+cairo(G.source_updated_at)+' (القاهرة) · المصدر: '+(G.source==="manual"?"إدارة المحل":G.source==="backup"?"مزود احتياطي":"Gold Timo")+(GE?' · تعذر التحديث الآن':'')+'</div>';
+ if(m!=="NONE")h+='<div class="note">سعر الجرام للبيع · آخر تحديث: '+cairo(G.source_updated_at)+' (القاهرة) · المصدر: '+(G.source==="manual"?"إدارة المحل":G.source==="backup"?"مزود احتياطي":G.source==="goldapi"?"السوق العالمي × سعر الدولار":"Gold Timo")+(GE?' · تعذر التحديث الآن':'')+'</div>';
  $("pb").innerHTML=h}
 setInterval(loadG,60000);loadG();
 function persist(){sv("bgs",S)}
