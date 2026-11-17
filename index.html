@@ -217,6 +217,7 @@ header nav a{white-space:nowrap}
 .loc .shop{width:380px}
 .grid{grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
 }
+.gt{display:grid;gap:0}.gt .gh,.gt .gr{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:6px;align-items:center;padding:6px 2px;border-bottom:1px solid var(--ln)}.gt .gh{color:var(--m);font-size:.8rem}.gt .gr span{color:var(--t);font-weight:600;font-size:.9rem}.gt .gr b{color:var(--g2);font-size:.92rem}.gt .gr b.bu{color:var(--t)}
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet"></head>
 <body>
@@ -281,20 +282,32 @@ function eff(){ /* لا نعرض LIVE إلا إذا كان وقت المصدر �
 function sbf(p,o){o=o||{};o.headers=Object.assign({apikey:SB.anon,Authorization:"Bearer "+(A.tok||SB.anon),"Content-Type":"application/json"},o.headers||{});return fetch(SB.url+p,o)}
 async function liveG(){var a=await(await fetch("https://api.gold-api.com/price/XAU")).json(),u=Number(a.price),f=0;try{f=Number((await(await fetch("https://open.er-api.com/v6/latest/USD")).json()).rates.EGP)}catch(e){}
 if(!(u>500)||!(f>5))return null;var g=u*f/31.1035,P={};[24,21,18,14].forEach(function(k){var p=g*k/24;P[k]={sell:Math.round(p),buy:Math.round(p*.9936)}});return{mode:"LIVE",source:"goldapi",source_updated_at:a.updatedAt||new Date().toISOString(),prices:P,market:"OPEN"}}
+/* سعر الذهب من golden-circle.net (جرام 24/21/18/14). الأعلى = سعر الشراء من العميل (sell عندنا) والأقل = سعر البيع للعميل (buy) */
+async function gcG(){var U="https://golden-circle.net/ar/prices",L=[U,"https://api.allorigins.win/raw?url="+encodeURIComponent(U),"https://corsproxy.io/?url="+encodeURIComponent(U)];
+for(var i=0;i<L.length;i++){try{var c=new AbortController(),tm=setTimeout(function(){c.abort()},8000),r=await fetch(L[i],{signal:c.signal,cache:"no-store"});clearTimeout(tm);if(!r.ok)continue;
+var t=(await r.text()).replace(/<script[\s\S]*?<\/script>/gi," ").replace(/<style[\s\S]*?<\/style>/gi," ").replace(/<[^>]+>/g," ").replace(/&nbsp;/g," ");
+var P={},ok=true;[24,21,18,14].forEach(function(k){var j=t.indexOf("جرام عيار "+k);if(j<0){ok=false;return}
+var n=(t.slice(j,j+500).match(/\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d{4,}(?:\.\d+)?/g)||[]).map(function(v){return Number(v.replace(/,/g,""))}).filter(function(v){return v>500}).slice(0,2);
+if(n.length<2){ok=false;return}P[k]={sell:Math.max(n[0],n[1]),buy:Math.min(n[0],n[1])}});
+if(!ok||!(P[24].sell>P[21].sell&&P[21].sell>P[18].sell&&P[18].sell>P[14].sell))continue;
+return{mode:"LIVE",source:"golden-circle",source_updated_at:new Date().toISOString(),prices:P,market:"OPEN"}}catch(e){}}
+return null}
 async function loadG(){try{if(SB.url){var r=await sbf("/rest/v1/gold_state?id=eq.1&select=*");if(!r.ok)throw 0;G=(await r.json())[0]||null;GE=false}}catch(e){GE=true}
-try{var st=!G||!G.prices||(G.mode!=="MANUAL"&&(GE||Date.now()-new Date(G.source_updated_at||0).getTime()>20*6e4));if(st){var x=await liveG();if(x){G=Object.assign({},G||{},x);GE=false}}}catch(e){}
+try{var x=null;if(!G||G.mode!=="MANUAL")x=await gcG();
+if(!x){var st=!G||!G.prices||(G.mode!=="MANUAL"&&(GE||Date.now()-new Date(G.source_updated_at||0).getTime()>20*6e4));if(st)x=await liveG()}
+if(x){G=Object.assign({},G||{},x);GE=false}}catch(e){}
 render()}
 function gram(k){var m=eff();if(!m||m==="NONE"||!G.prices||!G.prices[k])return null;return G.prices[k].sell}
 function lbl(){var m=eff();return m==="STALE"?"آخر سعر متاح":m==="MANUAL"?"سعر معتمد من المحل":"تقديري"}
 function renderBar(){setTimeout(function(){if($("soc2")&&$("soc"))$("soc2").innerHTML=$("soc").innerHTML;bellBadge();cartBadge();if($("fwa"))$("fwa").href=waLink("مرحباً Bashar Gold")},0);var m=eff(),h='<h3>أسعار الذهب في مصر</h3>';
  if(!SB.url&&!G){$("pb").innerHTML=h+'<p class="wn">نظام الأسعار غير مُفعّل بعد - اسأل عن السعر داخل المحل</p>';return}
  if(!m){$("pb").innerHTML=h+'<p class="wn">'+(GE?'تعذر تحميل الأسعار - يرجى تأكيد السعر داخل المحل':'جارٍ تحميل الأسعار...')+'</p>';return}
- h+='<div class="gk">'+KS.map(function(k){var g=gram(k);return'<div><small>عيار '+k+'</small><b>'+(g==null?'--':money(g))+'</b></div>'}).join('')+'</div>';
+ h+='<div class="gt"><div class="gh"><span>العيار</span><span>سعر الشراء</span><span>سعر البيع</span></div>'+KS.map(function(k){var g=gram(k),b=(m!=="NONE"&&G.prices&&G.prices[k])?G.prices[k].buy:null;return'<div class="gr"><span>جرام عيار '+k+'</span><b>'+(g==null?'--':money(g))+'</b><b class="bu">'+(b==null?'--':money(b))+'</b></div>'}).join('')+'</div>';
  h+='<div><span class="bd '+m+'">'+MODE[m]+'</span></div>';
  if(m==="STALE")h+='<div class="wn">'+(G.market==="CLOSED"?'السوق مغلق - ':'تحديث الأسعار متوقف - ')+'آخر سعر متاح – يرجى تأكيد السعر داخل المحل</div>';
  if(m==="MANUAL")h+='<div class="wn">سعر معتمد من إدارة المحل وليس سعراً لحظياً من السوق</div>';
  if(m==="NONE")h+='<div class="wn">الأسعار غير متاحة حالياً - يرجى السؤال داخل المحل</div>';
- if(m!=="NONE")h+='<div class="note">سعر الجرام للبيع · آخر تحديث: '+cairo(G.source_updated_at)+' (القاهرة) · المصدر: '+(G.source==="manual"?"إدارة المحل":G.source==="backup"?"مزود احتياطي":G.source==="goldapi"?"السوق العالمي × سعر الدولار":"Gold Timo")+(GE?' · تعذر التحديث الآن':'')+'</div>';
+ if(m!=="NONE")h+='<div class="note">سعر الشراء = ما تدفعه عند الشراء · سعر البيع = ما تحصل عليه عند البيع · آخر تحديث: '+cairo(G.source_updated_at)+' (القاهرة) · المصدر: '+(G.source==="manual"?"إدارة المحل":G.source==="backup"?"مزود احتياطي":G.source==="goldapi"?"السوق العالمي × سعر الدولار":G.source==="golden-circle"?"جولدن سيركل":"Gold Timo")+(GE?' · تعذر التحديث الآن':'')+'</div>';
  $("pb").innerHTML=h}
 setInterval(loadG,60000);loadG();
 function persist(){sv("bgs",S)}
