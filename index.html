@@ -269,6 +269,10 @@ dialog{overflow-x:hidden;overscroll-behavior:contain}
 .potd-row .pc h4{font-size:.9rem}.potd-row .pc .meta,.potd-row .pc .av{font-size:.78rem}.potd-row .pc .pr{font-size:.92rem}
 .potd-row .pc .ca{font-size:.82rem;padding:6px}
 .potd-row .img span{font-size:2.4rem}
+
+#pdb .big{aspect-ratio:1/1;background:#0a0805;touch-action:pan-y}
+#pdb .big span img,#pdb .big>img{object-fit:contain;background:#0a0805}
+#pdb .gal{scroll-snap-type:x proximity;padding-bottom:4px}
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet"></head>
 <body>
@@ -1196,5 +1200,16 @@ if(isA){var np="Notification"in window?Notification.permission:"x";h+='<div clas
 if(!(window.matchMedia&&matchMedia("(display-mode: standalone)").matches||navigator.standalone))h+='<div class="row"><span>📲 تثبيت الموقع كتطبيق</span><button type="button" class="btn ghost" data-act="install">تثبيت</button></div><p class="note" id="insth"></p>';
 if(isA)h+='<div class="row"><span>📺 شاشة عرض للمحل</span><button type="button" class="btn ghost" data-act="tvon">فتح</button></div>';if(!u&&!isA)h+='<p class="note">لست مسجلاً للدخول حالياً.</p>';
 b.innerHTML=h;if(!d.open)d.showModal()}</script>
+<script>
+(function(){var x0=null,y0=0;
+document.addEventListener("touchstart",function(e){var b=e.target.closest&&e.target.closest("#pdb .big");if(!b){x0=null;return}x0=e.touches[0].clientX;y0=e.touches[0].clientY},{passive:true});
+document.addEventListener("touchend",function(e){if(x0===null)return;var t=e.changedTouches[0],dx=t.clientX-x0,dy=t.clientY-y0;x0=null;
+if(Math.abs(dx)<40||Math.abs(dx)<Math.abs(dy))return;
+var m=document.querySelector("#pdb .big img"),g=[].slice.call(document.querySelectorAll("#pdb .gal img"));if(!m||g.length<2)return;
+var i=g.findIndex(function(a){return a.src===m.src});if(i<0)i=0;
+i=dx<0?(i+1)%g.length:(i-1+g.length)%g.length;m.src=g[i].src;
+try{g[i].scrollIntoView({behavior:"smooth",inline:"center",block:"nearest"})}catch(_){}},{passive:true});
+})();
+</script>
 </body>
 </html>
