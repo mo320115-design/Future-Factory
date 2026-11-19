@@ -1087,10 +1087,10 @@ if(saved==="en")setTimeout(function(){set(true)},400);
 function bgBadge(n){try{if(navigator.setAppBadge){n>0?navigator.setAppBadge(n):navigator.clearAppBadge()}}catch(e){}}
 function bgNotify(t,b){try{if(!("Notification"in window)||Notification.permission!=="granted")return;var o={body:b||"",icon:"icon-192.png",badge:"icon-192.png",tag:"bg-new",renotify:true,dir:"rtl",lang:"ar"};
  if(navigator.serviceWorker&&navigator.serviceWorker.getRegistration){navigator.serviceWorker.getRegistration().then(function(r){if(r)r.showNotification(t,o);else new Notification(t,o)}).catch(function(){try{new Notification(t,o)}catch(e){}})}else new Notification(t,o)}catch(e){}}
-var BG_VAPID="BEjO1vfAPpnxDmFBLMiMVjwUBhyvXhRdx-XbrBDRMbSXZK23yHhIbQ2pDyCa49_8yNrFwmDzz1o57eyD6STaaHU";
+var BG_VAPID="BC2zMK-eMcAncM_8dkU9wC1QhTkKZ0OvzCKy5957z_kO_O2-hTLAY8U7nekQMf8KmozK2Wb_13rfR2XxRn6Kfu0";
 function bgU8(b){var p="=".repeat((4-b.length%4)%4),r=atob((b+p).replace(/-/g,"+").replace(/_/g,"/")),o=new Uint8Array(r.length);for(var i=0;i<r.length;i++)o[i]=r.charCodeAt(i);return o}
 async function bgPushSub(){if(!("serviceWorker"in navigator)||!("PushManager"in window))return"unsupported";if(!A.tok)return"noadmin";
- try{var reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:bgU8(BG_VAPID)});
+ try{var reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();if(sub&&sub.options&&sub.options.applicationServerKey){var ek=new Uint8Array(sub.options.applicationServerKey),nk=bgU8(BG_VAPID);if(ek.length!==nk.length||ek.some(function(v,i){return v!==nk[i]})){await sub.unsubscribe();sub=null}}if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:bgU8(BG_VAPID)});
   var r=await sbf("/rest/v1/rpc/admin_save_push",{method:"POST",body:JSON.stringify({p_sub:sub.toJSON()})});return r.ok?"ok":"save:"+r.status}catch(e){return"err:"+(e&&e.message||e)}}
 function bgAskNotif(){if(!("Notification"in window))return toast("المتصفح لا يدعم الإشعارات");
  (Notification.permission==="granted"?Promise.resolve("granted"):Notification.requestPermission()).then(async function(p){
